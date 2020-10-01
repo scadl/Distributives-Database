@@ -1,0 +1,95 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+    <title>Distributives select (AJAX inside)</title>
+    <style>
+    body{
+        font-family: sans-serif;
+        text-align: center;
+    } 
+	.block{
+		background: #eee; 
+		padding:5px; 
+		border-radius:10px; 
+		border: solid 1px #ccc; 
+	}
+	.cell{
+		border-top: 1px solid #bbb;
+		border-bottom: 1px solid #bbb;
+	}
+    </style>
+</head>
+<body>   
+
+<div align="center">
+
+<div align="center" class="block" style="width:230px;">
+Какая программа вам нужна?
+<form action="distributives.php" method="get" name="mform">
+<input type="text" name="soft_name" id="app_name" value="" width="220" onkeypress="return runScript(event)">
+<input type="button" value="AJAX поиск" onclick="SerchAJAX()">
+<!--<input type="submit" value="Обычный поиск" > -->
+</form>
+</div>
+
+<div align="center" class="block" style="width:230px;">
+AJAX статус: <div id="status">Введите запрос...</div>
+</div>
+<div id="result"></div>
+
+</div>
+
+
+<script type="text/javascript">
+
+function runScript(e) {
+    if (e.keyCode == 13) {
+        //var tb = document.getElementById("app_name");
+        //eval(tb.value);
+		SerchAJAX();
+        return false;
+    }
+}
+
+function SerchAJAX(){
+var ajax_obj = new XMLHttpRequest();
+	ajax_obj.onreadystatechange = function(){ 																		//Ссылается на функцию-обработчик состояний запроса.
+		if (ajax_obj.readyState == 4){ 																				//Номер состояния запроса от 0 до 4. Используйте только 4 ("completed"). 
+			document.getElementById('status').innerHTML = ajax_obj.statusText;										//Текстовая расшифровка status, например "Not Found" или "OK". 
+			switch(ajax_obj.status){ 																				//Для HTTP-запросов - статусный код ответа сервера: 200 - OK, 404 - Not Found, и т.п. Браузер Internet Explorer может также присвоить status код ошибки WinInet, например 12029 для ошибки "cannot connect".
+			case 200: ResultAdapter(ajax_obj.responseText); break;													//Текст ответа сервера. Полный текст есть только при readyState=4, ряд браузеров дают доступ к полученной части ответа сервера при readyState=3. 
+			case 404: document.getElementById("result").innerHTML = "Цель запроса не найдена"; break;
+			default: document.getElementById("result").innerHTML = "Код ошибки: "+ajax_obj.status; break;
+			}
+		}
+	}
+	//ajax_obj.open('GET','distributives.php?soft_name=' + document.forms['mform'].elements['app_name'].value, true);
+	//ajax_obj.send(null); 																								//Отсылает запрос. Аргумент - тело запроса. Например, GET-запроса тела нет, поэтому используется send(null), а для POST-запросов тело содержит параметры запроса.
+	ajax_obj.open('POST','distributives.php', true);
+	ajax_obj.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	ajax_obj.send('soft_name=' + document.forms['mform'].elements['app_name'].value); 	
+	document.getElementById('status').innerHTML = "Ожидаем ответа от сервера";
+	//alert('distributives.php?soft_name=' + document.forms['mform'].elements['app_name'].value);
+	//alert('distributives.php?soft_name=' + document.mform.app_name.value)
+}
+
+function ResultAdapter(result){
+		
+	var formatxt = "";
+	var rows = result.split("|");
+	//document.getElementById("status").innerHTML = "" + rows.length;
+	for (i=0; i <= rows.length-2; i++){
+		var cols = rows[i].split("*");		
+		formatxt = formatxt + "<tr><td align='left' class='cell' style='width:60%'>" + cols[0] + "</td><td align='right' class='cell' style='width:10%'>" + cols[1] + "</tr>"
+	}
+	if ( rows.length <= 2 ) { formatxt="<tr width='100' ><td align='center' class='cell'>"+cols[0]+"</td></tr>" }
+
+	document.getElementById("result").innerHTML = ""
+	+ "<table border='0' cellpadding='3' cellspacing='0' class='block' style='width:70%'>" + formatxt + "</table>" 
+	+ "<br><div class='block' style='width:69%'><i>У нас в базе <b>" + rows[rows.length-1] + "</b> наименований программ.</i></div>";
+
+	
+}
+</script>
+</body>
